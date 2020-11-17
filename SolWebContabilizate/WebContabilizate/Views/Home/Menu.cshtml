@@ -1,0 +1,329 @@
+﻿
+@{
+    ViewBag.Title = "Menu";
+}
+
+<h2>Menu</h2>
+
+<div id="formulario" class="hide">
+    <input type="hidden" name="name" value="" id="IdUsuario" />
+    <table class="table table-striped">
+        <tr>
+            <td>Nombre</td>
+            <td><input type="text" name="name" value="" id="txtNombre" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>RFC</td>
+            <td><input type="text" name="name" value="" id="txtRFC" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>Correo Electronico</td>
+            <td><input type="text" name="name" value="" id="txtCorreoElectronico" class="form-control" /></td>
+        </tr>
+        
+        <tr>
+            <td><input type="button" name="name" value="Cancelar" class="btn btn-danger" id="btnCancelar" /></td>
+            <td>
+                <input type="button" name="name" value="Agregar" class="btn btn-success" id="btnAgregar" />
+                <input type="button" name="name" value="Editar" class="btn btn-warning hide" id="btnEditar" />
+                <input type="button" name="name" value="Borrar" class="btn btn-danger hide" id="btnBorrar" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="tabla">
+    <select id="txtEquipo2">
+        <option value="value">text</option>
+    </select>
+    <a href="#" class="btn btn-info" id="lnkBuscar">Buscar</a>
+    <a href="#" class="btn btn-info" id="lnkAgregar">Agregar</a>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>RFC</th>
+                <th>Correo Electronico</th>
+                
+            </tr>
+        </thead>
+        <tbody id="Info">
+            <tr>
+                <td>
+                    
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        Tabla();
+    });
+    function Tabla() {
+        $.ajax({
+            type: 'GET',
+            url: '/Home/ObtenerContribuyentes',
+            contentType: 'application/json; charset=utf-8',
+            success: function (respuesta) {
+                if (respuesta.m == 'ok')
+                {
+                    DatosTabla(respuesta.lsj);
+
+                }
+                else {
+                    alert(respuesta.m);
+                }
+
+            },
+            error:function(objXMLHttpRequest)
+            {
+                alert(objXMLHttpRequest.responseText);
+            }
+
+        }
+
+            );
+        
+    }
+
+    function DatosTabla(infoTabla) {
+        debugger
+        var t = ' ';
+        $.each(infoTabla,function(i,x){
+            t += '<tr>';
+            t += '<td>';
+            t += x.Nombre;
+            t += '</td>';
+
+            t += '<td>';
+            t += x.RFC;
+            t += '</td>';
+
+            t += '<td>';
+            t += x.CorreoElectronico;
+            t += '</td>';
+
+          
+
+            t += '<td>';
+            t += '<a href="#" class="btn btn-danger" onclick="BorrarGet(' + x.IdContribuyente + ')">Borrar</a>'
+            t += '</td>';
+
+            t += '<td>';
+            t += '<a href="#" class="btn btn-warning" onclick="EditarGet(' + x.IdContribuyente + ')">Editar</a>'
+            t += '</td>';
+            t += '</tr>';
+        });
+
+        $("#Info").empty();
+        $("#Info").html(t);
+
+    }
+    $("#lnkAgregar").click(function()
+    {
+        $("#tabla").removeClass("show");
+        $("#tabla").addClass("hide");
+        $("#formulario").removeClass("hide");
+        $("#formulario").addClass("Show");
+
+        $("#txtNombre").val(""),
+        $("#txtRFC").val(""),
+        $("#txtCorreoElectronico").val("")
+
+        $("#txtNombre").prop("readonly", false);
+        $("#txtRFC").prop("readonly", false);
+        $("#txtCorreoElectronico").prop("readonly", false);
+        
+
+        $("#btnAgregar").removeClass("hide");
+        $("#btnAgregar").addClass("show");
+
+        $("#btnEditar").removeClass("show");
+        $("#btnEditar").addClass("hide");
+
+        $("#btnBorrar").removeClass("show");
+        $("#btnBorrar").addClass("hide");
+        
+
+
+
+    });
+    $("#btnCancelar").click(function () {
+        $("#tabla").removeClass("hide");
+        $("#tabla").addClass("show");
+        $("#formulario").removeClass("show");
+        $("#formulario").addClass("hide");
+    });
+    $("#btnAgregar").click(function () {
+        var contribuyente = {
+            Nombre: $("#txtNombre").val(),
+            Posicion: $("#txtRFC").val(),
+            NumeroPlayera: $("#txtCorreoElectronico").val()
+        };
+
+        $.ajax({
+            type: "post",
+            url: "/Home/AgregarContribuyente",
+            contentType: "application/json; charset=utf-8;",
+            dataType: "Json",
+            data: JSON.stringify(contribuyente),
+            success: function (r) {
+                if (r.m == 'ok') {
+                    alert(r.msg);
+                    Tabla();
+                    $("#tabla").removeClass("hide");
+                    $("#tabla").addClass("show");
+                    $("#formulario").removeClass("show");
+                    $("#formulario").addClass("hide");
+                }
+                else {
+                    alert(r.m);
+                }
+            }
+        })
+
+    })
+
+    function BorrarGet(IdContribuyente) {
+        $.ajax(
+            {
+                type: 'Get',
+                url: '/Home/BorrarGet/' + IdContribuyente,
+                contentType: 'application/json;charset=utf-8',
+                success: function (respuesta) {
+                    if (respuesta.m == 'ok') {
+                        $("#txtNombre").val(respuesta.ent.Nombre),
+                        $("#txtRFC").val(respuesta.ent.RFC),
+                        $("#txtCorreoElectronico").val(respuesta.ent.CorreoElectronico),
+                        $("#txtIdContribuyente").val(respuesta.ent.IdContribuyente)
+
+//Poner las cajas de texto del formulario en ReadOnly
+                        $("#txtNombre").prop("readonly",true);
+                        $("#txtRFC").prop("readonly", true);
+                        $("#txtCorreoElectronico").prop("readonly", true);
+                        
+//Ocultar tabla y muestra el formulario
+                         $("#tabla").removeClass("show");
+                       $("#tabla").addClass("hide");
+                       $("#formulario").removeClass("hide");
+                       $("#formulario").addClass("show");
+
+                       $("#btnAgregar").removeClass("show");
+                       $("#btnAgregar").addClass("hide");
+
+                       $("#btnEditar").removeClass("show");
+                       $("#btnEditar").addClass("hide");
+
+                       $("#btnBorrar").removeClass("hide");
+                       $("#btnBorrar").addClass("show");
+                    }
+                }
+            })
+    }
+
+    $("#btnBorrar").click(function () {
+
+        $.ajax({
+            type: "post",
+            url: "/Home/BorrarPost/" + $("#txtIdContribuyente").val(),
+            contentType: "application/json; charset=utf-8;",
+            dataType: "Json",
+            success: function (r) {
+                if (r.m == 'ok') {
+                    alert(r.msg);
+                    Tabla();
+                    $("#tabla").removeClass("hide");
+                    $("#tabla").addClass("show");
+                    $("#formulario").removeClass("show");
+                    $("#formulario").addClass("hide");
+
+                    $("#txtNombre").val(""),
+                     $("#txtRFC").val(""),
+                     $("#txtCorreoElectronico").val("")
+                    }
+                else {
+                    alert(r.m);
+                }
+            }
+
+        })
+
+    })
+
+
+    function EditarGet(IdContribuyente) {
+        $.ajax(
+            {
+                type: 'Get',
+                url: '/Home/EditarGet/' + IdContribuyente,
+                contentType: 'application/json;charset=utf-8',
+                success: function (respuesta) {
+                    if (respuesta.m == 'ok') {
+                        $("#txtNombre").val(respuesta.ent.Nombre),
+                        $("#txtRFC").val(respuesta.ent.RFC),
+                        $("#txtCorreoElectronico").val(respuesta.ent.CorreoElectronico),
+                        $("#txtIdContribuyente").val(respuesta.ent.IdContribuyente)
+                      
+
+
+                        $("#txtNombre").prop("readonly", false);
+                        $("#txtRFC").prop("readonly", false);
+                        $("#txtCorreoElectronico").prop("readonly", false);
+                       
+                        //Ocultar tabla y muestra el formulario
+                        $("#tabla").removeClass("show");
+                        $("#tabla").addClass("hide");
+                        $("#formulario").removeClass("hide");
+                        $("#formulario").addClass("show");
+
+                        $("#btnAgregar").removeClass("show");
+                        $("#btnAgregar").addClass("hide");
+
+                        $("#btnEditar").removeClass("hide");
+                        $("#btnEditar").addClass("show");
+
+                        $("#btnBorrar").removeClass("show");
+                        $("#btnBorrar").addClass("hide");
+                    }
+                }
+            })
+    }
+
+    $("#btnEditar").click(function () {
+        var jugador = {
+            Nombre: $("#txtNombre").val(),
+            Posicion: $("#txtRFC").val(),
+            NumeroPlayera: $("#txtCorreoElectronico").val(),
+            IdContribuyente: $("#txtIdContribuyente").val(),
+            
+        };
+
+        $.ajax({
+            type: "post",
+            url: "/Home/EditarPost/",
+            contentType: "application/json; charset=utf-8;",
+            dataType: "Json",
+            data: JSON.stringify(contribuyente),
+            success: function (r) {
+                if (r.m == 'ok') {
+                    alert(r.msg);
+                    Tabla();
+                    $("#tabla").removeClass("hide");
+                    $("#tabla").addClass("show");
+                    $("#formulario").removeClass("show");
+                    $("#formulario").addClass("hide");
+                }
+                else {
+                    alert(r.m);
+                }
+            }
+        })
+
+    })
+
+    
+</script>
